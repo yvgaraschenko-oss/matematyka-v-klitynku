@@ -1,0 +1,9 @@
+{
+  "appId": "ua.garaschenko.matematyka",
+  "appName": "Математика",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#FBFCF6"
+  }
+}

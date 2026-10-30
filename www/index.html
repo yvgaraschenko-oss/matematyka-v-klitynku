@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Математика в клітинку</title>
+<style>
+/* Layout: one screen, a squared school notebook page with a red margin line; big keypad at the bottom for small fingers */
+:root{
+  --paper:#FBFCF6; --grid:#D5E3F2; --margin:#E2656A;
+  --ink:#2A4CA0; --ink-soft:#5E73A8; --text:#22304F;
+  --ok:#2C9A58; --ok-bg:#E2F4E8; --oops:#D9822B; --oops-bg:#FCEEDD;
+  --star:#F4B52C; --key:#FFFFFF; --key-edge:#C9D6E8; --chip:#EEF3FB;
+  --display:ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:ui-rounded,system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#192233; --grid:#25324A; --margin:#C2565C;
+  --ink:#8FB0FF; --ink-soft:#8D9DC4; --text:#E6ECF8;
+  --ok:#55C985; --ok-bg:#1C3A2B; --oops:#F0A25A; --oops-bg:#3B2C1C;
+  --star:#F7C548; --key:#222D42; --key-edge:#33425E; --chip:#24304A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#192233; --grid:#25324A; --margin:#C2565C;
+  --ink:#8FB0FF; --ink-soft:#8D9DC4; --text:#E6ECF8;
+  --ok:#55C985; --ok-bg:#1C3A2B; --oops:#F0A25A; --oops-bg:#3B2C1C;
+  --star:#F7C548; --key:#222D42; --key-edge:#33425E; --chip:#24304A; color-scheme:dark}
+
+html,body{height:100%;margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+*{touch-action:manipulation;-webkit-user-select:none}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:22px 22px;
+  color:var(--text); font-family:var(--body); font-size:16px;
+  -webkit-tap-highlight-color:transparent; user-select:none;
+}
+.page{
+  position:relative; max-width:520px; margin:0 auto; min-height:100%;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:14px 18px; display:flex; flex-direction:column; gap:14px; box-sizing:border-box;
+}
+.page::before{content:"";position:absolute;top:0;bottom:0;left:max(8px, env(safe-area-inset-left,0px));width:2px;background:var(--margin);opacity:.7;pointer-events:none}
+h1,h2{font-family:var(--display);color:var(--ink);margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2rem;line-height:1.1}
+h2{font-size:1.35rem}
+p{margin:0;line-height:1.5}
+.screen{display:flex;flex-direction:column;gap:16px;flex:1}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+/* top bar */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.icon-btn{width:44px;height:44px;border-radius:12px;background:var(--key);border:2px solid var(--key-edge);font-size:1.2rem;display:grid;place-items:center}
+
+/* start */
+.lead{color:var(--ink-soft);font-weight:700}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.chip{
+  font-family:var(--display);font-size:1.6rem;font-weight:700;height:62px;border-radius:14px;
+  background:var(--key);border:2px solid var(--key-edge);color:var(--ink);transition:transform .12s;
+}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.chip:active{transform:scale(.95)}
+.chip small{display:block;font-family:var(--body);font-size:.7rem;font-weight:800;opacity:.8;margin-top:-4px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.link{color:var(--ink);font-weight:800;text-decoration:underline;text-underline-offset:3px;padding:6px 2px}
+.big{
+  font-family:var(--display);font-size:1.5rem;font-weight:700;width:100%;padding:16px;border-radius:18px;
+  background:var(--ok);color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--ok) 60%,#000);transition:transform .1s,box-shadow .1s;
+}
+.big:active{transform:translateY(4px);box-shadow:0 1px 0 color-mix(in srgb,var(--ok) 60%,#000)}
+.big:disabled{opacity:.45;cursor:default}
+.big.alt{background:var(--key);color:var(--ink);border:2px solid var(--key-edge);box-shadow:0 5px 0 var(--key-edge)}
+.crib{background:var(--key);border:2px dashed var(--key-edge);border-radius:16px;padding:14px 16px}
+.crib-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
+.crib-tabs button{min-width:40px;height:36px;border-radius:10px;background:var(--chip);font-weight:800;color:var(--ink)}
+.crib-tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.crib-list{columns:2;column-gap:20px;font-family:var(--display);font-size:1.15rem;line-height:1.75;font-variant-numeric:tabular-nums;color:var(--text);margin-top:6px}
+.crib-list b{color:var(--ink)}
+
+/* play */
+.stars{display:flex;gap:4px;justify-content:center}
+.stars span{width:26px;height:26px;display:grid;place-items:center;font-size:1.25rem;color:var(--key-edge);transition:transform .3s}
+.stars span.on{color:var(--star);transform:scale(1.15)}
+.stars span.miss{color:var(--oops);opacity:.6}
+.stars span.cur{outline:2px solid var(--ink);outline-offset:1px;border-radius:50%}
+.board{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:170px}
+.eq{font-family:var(--display);font-weight:700;font-size:clamp(2.8rem,14vw,4.4rem);color:var(--text);display:flex;align-items:center;gap:.25em;font-variant-numeric:tabular-nums;line-height:1}
+.slot{min-width:1.9em;padding:0 .15em;height:1.25em;border-bottom:5px solid var(--ink);color:var(--ink);display:grid;place-items:center;transition:background .2s}
+.slot.ok{color:var(--ok);border-color:var(--ok);background:var(--ok-bg);border-radius:10px 10px 0 0}
+.slot.no{color:var(--oops);border-color:var(--oops);background:var(--oops-bg);border-radius:10px 10px 0 0}
+.slot .caret{width:3px;height:.85em;background:var(--ink);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.msg{min-height:3.2em;text-align:center;font-weight:800;font-size:1.15rem}
+.msg.ok{color:var(--ok)} .msg.no{color:var(--oops)}
+.msg .fix{display:block;font-family:var(--display);font-size:1.4rem;color:var(--text)}
+.streak{font-weight:800;color:var(--ink-soft);font-size:.9rem}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.key{
+  height:clamp(54px,9vh,68px);border-radius:16px;background:var(--key);border:2px solid var(--key-edge);
+  font-family:var(--display);font-size:1.9rem;font-weight:700;color:var(--text);
+  box-shadow:0 4px 0 var(--key-edge);transition:transform .08s,box-shadow .08s;
+}
+.key:active{transform:translateY(3px);box-shadow:0 1px 0 var(--key-edge)}
+.key.go{background:var(--ok);border-color:var(--ok);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--ok) 60%,#000)}
+.key.del{color:var(--ink-soft);font-size:1.5rem}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.pop{animation:pop .45s}
+@keyframes pop{40%{transform:scale(1.12)}}
+
+/* result */
+.medal{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;padding-top:10px}
+.medal .big-stars{font-size:3.4rem;letter-spacing:.1em;color:var(--key-edge)}
+.medal .big-stars .on{color:var(--star)}
+.score{font-family:var(--display);font-size:3rem;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.review{background:var(--key);border:2px solid var(--key-edge);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.review li{font-family:var(--display);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.review ul{margin:0;padding-left:1.1em;columns:2}
+.review s{color:var(--oops);font-size:.9em;margin-left:.4em}
+.note{color:var(--ink-soft);font-size:.9rem;text-align:center}
+.block{display:flex;flex-direction:column;gap:10px}
+.chip.op{font-size:2rem}
+.chip.op small{font-size:.62rem}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.seg button{height:52px;border-radius:14px;background:var(--key);border:2px solid var(--key-edge);font-family:var(--display);font-size:1.4rem;font-weight:700;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- START -->
+  <section class="screen" id="start">
+    <div class="bar">
+      <h1>Математика<br>в клітинку</h1>
+      <button class="icon-btn" id="soundBtn" aria-label="Звук">🔊</button>
+    </div>
+
+    <div class="block">
+      <p class="lead">Що будемо тренувати?</p>
+      <div class="chips" id="ops"></div>
+    </div>
+
+    <div class="block" id="rangeBlock">
+      <p class="lead">Додаємо і віднімаємо числа до:</p>
+      <div class="seg" id="ranges"></div>
+    </div>
+
+    <div class="block" id="tableBlock">
+      <p class="lead">Які таблиці множення та ділення?</p>
+      <div class="chips" id="chips"></div>
+      <div class="row">
+        <button class="link" id="allBtn">Обрати всі</button>
+        <button class="link" id="noneBtn">Прибрати всі</button>
+      </div>
+    </div>
+
+    <div class="crib" id="crib">
+      <h2>Шпаргалка</h2>
+      <div class="crib-tabs" id="cribTabs" role="group" aria-label="Таблиця для перегляду"></div>
+      <div class="crib-list" id="cribList"></div>
+    </div>
+
+    <button class="big" id="goBtn">Почати! 10 прикладів</button>
+    <p class="note" id="best"></p>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen" id="play" hidden>
+    <div class="bar">
+      <button class="icon-btn" id="backBtn" aria-label="Назад">←</button>
+      <div class="stars" id="stars"></div>
+      <span class="streak" id="streak" style="min-width:44px;text-align:right"></span>
+    </div>
+    <div class="board">
+      <div class="eq" id="eq"><span id="qa">7</span><span id="qop">×</span><span id="qb">8</span><span>=</span><span class="slot" id="slot"></span></div>
+      <div class="msg" id="msg" aria-live="polite"></div>
+    </div>
+    <div class="pad" id="pad"></div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="result" hidden>
+    <div class="medal">
+      <div class="big-stars" id="bigStars"></div>
+      <div class="score" id="score">8 / 10</div>
+      <h2 id="praise">Чудова робота!</h2>
+    </div>
+    <div class="review" id="review" hidden>
+      <h2>Ці приклади варто повторити</h2>
+      <ul id="reviewList"></ul>
+    </div>
+    <button class="big" id="fixBtn" hidden>Потренувати помилки</button>
+    <button class="big" id="againBtn">Ще раз</button>
+    <button class="big alt" id="homeBtn">Змінити налаштування</button>
+  </section>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const store = {
+    get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+    set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  };
+  const OPS=[
+    {id:'+',name:'додавання'},
+    {id:'−',name:'віднімання'},
+    {id:'×',name:'множення'},
+    {id:'÷',name:'ділення'}
+  ];
+  const RANGES=[10,20,100];
+  const NUMS=[2,3,4,5,6,7,8,9,10,1];
+
+  let ops = new Set(store.get('mx-ops',['×']));
+  let range = store.get('mx-range',10);
+  let selected = new Set(store.get('mx-sel',[2,3]));
+  let sound = store.get('mx-sound',true);
+  let cribN = [...selected][0] || 2;
+  const usesTables = () => ops.has('×') || ops.has('÷');
+  const usesRange = () => ops.has('+') || ops.has('−');
+  function save(){ store.set('mx-ops',[...ops]); store.set('mx-range',range); store.set('mx-sel',[...selected]); }
+
+  // ---- sound
+  let ac=null;
+  function beep(ok){
+    if(!sound) return;
+    try{
+      ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+      const notes = ok ? [660,880] : [300,240];
+      notes.forEach((f,i)=>{
+        const o=ac.createOscillator(), g=ac.createGain();
+        o.type = ok?'triangle':'sine'; o.frequency.value=f;
+        const t=ac.currentTime+i*0.11;
+        g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.18,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
+        o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.22);
+      });
+    }catch(e){}
+  }
+  function renderSound(){ $('soundBtn').textContent = sound?'🔊':'🔇'; $('soundBtn').setAttribute('aria-label', sound?'Вимкнути звук':'Увімкнути звук'); }
+  $('soundBtn').onclick=()=>{sound=!sound;store.set('mx-sound',sound);renderSound();};
+
+  // ---- start screen
+  function renderOps(){
+    const box=$('ops'); box.innerHTML='';
+    OPS.forEach(o=>{
+      const b=document.createElement('button');
+      b.className='chip op'; b.setAttribute('aria-pressed',ops.has(o.id));
+      b.innerHTML = o.id + '<small>'+o.name+'</small>';
+      b.setAttribute('aria-label',o.name);
+      b.onclick=()=>{ ops.has(o.id)?ops.delete(o.id):ops.add(o.id); save(); renderAll(); };
+      box.appendChild(b);
+    });
+  }
+  function renderRanges(){
+    const box=$('ranges'); box.innerHTML='';
+    RANGES.forEach(r=>{
+      const b=document.createElement('button');
+      b.textContent=r; b.setAttribute('aria-pressed',r===range);
+      b.onclick=()=>{range=r;save();renderRanges();};
+      box.appendChild(b);
+    });
+  }
+  function renderChips(){
+    const box=$('chips'); box.innerHTML='';
+    NUMS.forEach(n=>{
+      const b=document.createElement('button');
+      b.className='chip'; b.setAttribute('aria-pressed',selected.has(n));
+      b.innerHTML = n + '<small>на '+n+'</small>';
+      b.setAttribute('aria-label','Таблиця на '+n);
+      b.onclick=()=>{ selected.has(n)?selected.delete(n):selected.add(n); cribN=n; save(); renderAll(); };
+      box.appendChild(b);
+    });
+  }
+  function renderCrib(){
+    const tabs=$('cribTabs'); tabs.innerHTML='';
+    [...NUMS].sort((a,b)=>a-b).forEach(n=>{
+      const b=document.createElement('button'); b.textContent=n;
+      b.setAttribute('aria-pressed',n===cribN);
+      b.onclick=()=>{cribN=n;renderCrib();};
+      tabs.appendChild(b);
+    });
+    const div = ops.has('÷') && !ops.has('×');
+    let h='';
+    for(let i=1;i<=10;i++) h += div
+      ? `<div>${cribN*i} ÷ ${cribN} = <b>${i}</b></div>`
+      : `<div>${cribN} × ${i} = <b>${cribN*i}</b></div>`;
+    $('cribList').innerHTML=h;
+  }
+  function renderGo(){
+    const go=$('goBtn');
+    let why='';
+    if(ops.size===0) why='Обери хоча б одну дію';
+    else if(usesTables() && selected.size===0) why='Обери хоча б одну таблицю';
+    go.disabled = !!why;
+    go.textContent = why || 'Почати! 10 прикладів';
+    const best=store.get('mx-best',0);
+    $('best').textContent = best ? `Найкращий результат: ${best} з 10 ⭐` : 'Відповідай без поспіху. Помилки допомагають вчитися!';
+  }
+  function renderAll(){
+    renderOps(); renderRanges(); renderChips(); renderCrib(); renderGo();
+    $('rangeBlock').hidden = !usesRange();
+    $('tableBlock').hidden = !usesTables();
+    $('crib').hidden = !usesTables();
+  }
+  $('allBtn').onclick=()=>{NUMS.forEach(n=>selected.add(n));save();renderAll();};
+  $('noneBtn').onclick=()=>{selected.clear();save();renderAll();};
+
+  // ---- questions
+  const rnd=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const answer=q=> q.op==='+'?q.a+q.b : q.op==='−'?q.a-q.b : q.op==='×'?q.a*q.b : q.a/q.b;
+  const key=q=>q.a+q.op+q.b;
+  function makeOne(op){
+    const tabs=[...selected];
+    if(op==='×'){ const t=tabs[rnd(0,tabs.length-1)], b=rnd(1,10); return Math.random()<.5?{a:t,op,b}:{a:b,op,b:t}; }
+    if(op==='÷'){ const t=tabs[rnd(0,tabs.length-1)], b=rnd(1,10); return {a:t*b,op,b:t}; }
+    const lo = range===100?5:range===20?2:0;
+    if(op==='+'){ const s=rnd(Math.max(lo*2,1),range), a=rnd(lo,s-lo); return {a,op,b:s-a}; }
+    const a=rnd(Math.max(lo*2,1),range), b=rnd(lo,a-lo); return {a,op,b};
+  }
+  function makeRound(pool){
+    const out=[];
+    if(pool){
+      for(let i=0;i<10;i++) out.push(pool[i%pool.length]);
+      return shuffle(out);
+    }
+    const list=[...ops], seen=new Set();
+    let tries=0;
+    while(out.length<10 && tries<500){
+      tries++;
+      const q=makeOne(list[out.length%list.length]);
+      if(seen.has(key(q)) && tries<400) continue;
+      seen.add(key(q)); out.push(q);
+    }
+    return shuffle(out);
+  }
+
+  // ---- game
+  let queue=[], idx=0, input='', results=[], streak=0, locked=false, lastPool=null;
+  const PRAISE=['Молодець!','Правильно!','Чудово!','Супер!','Так тримати!','Розумниця!','Блискуче!'];
+  function show(id){ ['start','play','result'].forEach(s=>$(s).hidden = s!==id); window.scrollTo(0,0); }
+
+  function startRound(pool){
+    lastPool = pool||null;
+    queue = makeRound(pool); idx=0; results=[]; streak=0;
+    show('play'); nextQ();
+  }
+  function renderStars(){
+    const box=$('stars'); box.innerHTML='';
+    queue.forEach((_,i)=>{
+      const s=document.createElement('span');
+      const r=results[i];
+      s.textContent = r===false ? '○' : '★';
+      if(r===true) s.className='on'; else if(r===false) s.className='miss'; else if(i===idx) s.className='cur';
+      box.appendChild(s);
+    });
+    $('streak').textContent = streak>=3 ? '🔥'+streak : '';
+  }
+  function nextQ(){
+    if(idx>=queue.length) return finish();
+    const q=queue[idx];
+    $('qa').textContent=q.a; $('qop').textContent=q.op; $('qb').textContent=q.b;
+    input=''; locked=false;
+    $('slot').className='slot'; $('msg').className='msg'; $('msg').innerHTML='';
+    renderSlot(); renderStars();
+  }
+  function renderSlot(){ $('slot').innerHTML = input ? input : '<span class="caret"></span>'; }
+  function press(k){
+    if(locked) return;
+    if(k==='del'){ input=input.slice(0,-1); renderSlot(); return; }
+    if(k==='go'){ check(); return; }
+    if(input.length>=3) return;
+    if(input==='0') input='';
+    input+=k; renderSlot();
+  }
+  function check(){
+    if(!input){ $('slot').classList.remove('shake'); void $('slot').offsetWidth; $('slot').classList.add('shake'); return; }
+    locked=true;
+    const q=queue[idx], ans=answer(q), ok=parseInt(input,10)===ans;
+    results[idx]=ok;
+    const slot=$('slot'), msg=$('msg');
+    if(ok){
+      streak++;
+      slot.className='slot ok pop'; msg.className='msg ok';
+      msg.textContent = streak>=5 && streak%5===0 ? `${streak} поспіль! Неймовірно!` : PRAISE[Math.floor(Math.random()*PRAISE.length)];
+      beep(true);
+      setTimeout(()=>{idx++;nextQ();}, 900);
+    } else {
+      streak=0;
+      slot.className='slot no shake'; msg.className='msg no';
+      msg.innerHTML = `Майже! Запам'ятай:<span class="fix">${q.a} ${q.op} ${q.b} = ${ans}</span>`;
+      beep(false);
+      setTimeout(()=>{ slot.textContent=ans; }, 450);
+      setTimeout(()=>{idx++;nextQ();}, 2400);
+    }
+    renderStars();
+  }
+  function finish(){
+    const good=results.filter(Boolean).length, total=queue.length, ratio=good/total;
+    const starsN = ratio===1?3: ratio>=0.8?2: ratio>=0.5?1:0;
+    $('bigStars').innerHTML=[0,1,2].map(i=>`<span class="${i<starsN?'on':''}">★</span>`).join('');
+    $('score').textContent=`${good} / ${total}`;
+    $('praise').textContent = starsN===3?'Ідеально! Жодної помилки!': starsN===2?'Чудова робота!': starsN===1?'Добре! Ще трохи практики':'Не здавайся, у тебе вийде!';
+    const wrong=[], seen=new Set();
+    queue.forEach((q,i)=>{ if(results[i]===false && !seen.has(key(q))){seen.add(key(q));wrong.push(q);} });
+    $('review').hidden = wrong.length===0;
+    $('fixBtn').hidden = wrong.length===0;
+    $('reviewList').innerHTML = wrong.map(q=>`<li>${q.a} ${q.op} ${q.b} = ${answer(q)}</li>`).join('');
+    $('fixBtn').onclick=()=>startRound(wrong);
+    if(!lastPool){ const best=store.get('mx-best',0); if(good>best) store.set('mx-best',good); }
+    show('result');
+    if(starsN>=2) beep(true);
+  }
+
+  // keypad
+  const pad=$('pad');
+  ['1','2','3','4','5','6','7','8','9','del','0','go'].forEach(k=>{
+    const b=document.createElement('button');
+    b.className='key'+(k==='go'?' go':k==='del'?' del':'');
+    b.textContent = k==='del'?'⌫':k==='go'?'✓':k;
+    b.setAttribute('aria-label', k==='del'?'Стерти':k==='go'?'Перевірити':k);
+    b.onclick=()=>press(k);
+    pad.appendChild(b);
+  });
+  document.addEventListener('keydown',e=>{
+    if($('play').hidden) return;
+    if(/^[0-9]$/.test(e.key)) press(e.key);
+    else if(e.key==='Backspace') press('del');
+    else if(e.key==='Enter'){ e.preventDefault(); press('go'); }
+  });
+
+  $('goBtn').onclick=()=>startRound(null);
+  $('againBtn').onclick=()=>startRound(lastPool);
+  $('homeBtn').onclick=()=>{renderAll();show('start');};
+  $('backBtn').onclick=()=>{renderAll();show('start');};
+
+  renderSound(); renderAll();
+})();
+</script>
+</body>
+</html>

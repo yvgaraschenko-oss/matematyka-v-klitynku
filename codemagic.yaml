@@ -1,0 +1,42 @@
+workflows:
+  ios-testflight:
+    name: Математика в клітинку → TestFlight
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: AppStoreKey
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: ua.garaschenko.matematyka
+      node: 20
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Встановити залежності
+        script: npm install
+      - name: Створити iOS-проєкт і значки
+        script: |
+          npx cap add ios
+          npx capacitor-assets generate --ios --iconBackgroundColor '#FBFCF6' --splashBackgroundColor '#FBFCF6'
+          npx cap sync ios
+      - name: Налаштувати Info.plist
+        script: |
+          PLIST=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Математика" $PLIST || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Математика" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" $PLIST || true
+      - name: Підписання
+        script: xcode-project use-profiles
+      - name: Номер збірки
+        script: |
+          cd ios/App
+          agvtool new-marketing-version 1.0
+          agvtool new-version -all $BUILD_NUMBER
+      - name: Зібрати .ipa
+        script: xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
