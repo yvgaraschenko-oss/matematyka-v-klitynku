@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Математика в клітинку</title>
 <style>
-/* Layout: one screen, a squared school notebook page with a red margin line; big keypad at the bottom for small fingers */
+/* Layout: a squared school notebook page with a red margin line; big keypad for small fingers */
 :root{
   --paper:#FBFCF6; --grid:#D5E3F2; --margin:#E2656A;
   --ink:#2A4CA0; --ink-soft:#5E73A8; --text:#22304F;
   --ok:#2C9A58; --ok-bg:#E2F4E8; --oops:#D9822B; --oops-bg:#FCEEDD;
   --star:#F4B52C; --key:#FFFFFF; --key-edge:#C9D6E8; --chip:#EEF3FB;
+  --m0:#F6C9C4; --m1:#F8E1A6; --m2:#CDEBC0; --m3:#7CCB8E; --m-ink:#22304F;
   --display:ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold",system-ui,sans-serif;
   --body:ui-rounded,system-ui,-apple-system,sans-serif;
 }
@@ -18,13 +19,16 @@
   --paper:#192233; --grid:#25324A; --margin:#C2565C;
   --ink:#8FB0FF; --ink-soft:#8D9DC4; --text:#E6ECF8;
   --ok:#55C985; --ok-bg:#1C3A2B; --oops:#F0A25A; --oops-bg:#3B2C1C;
-  --star:#F7C548; --key:#222D42; --key-edge:#33425E; --chip:#24304A; color-scheme:dark}}
+  --star:#F7C548; --key:#222D42; --key-edge:#33425E; --chip:#24304A;
+  --m0:#6B3330; --m1:#6A5622; --m2:#2F5A3A; --m3:#3E8F57; --m-ink:#E6ECF8; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#192233; --grid:#25324A; --margin:#C2565C;
   --ink:#8FB0FF; --ink-soft:#8D9DC4; --text:#E6ECF8;
   --ok:#55C985; --ok-bg:#1C3A2B; --oops:#F0A25A; --oops-bg:#3B2C1C;
-  --star:#F7C548; --key:#222D42; --key-edge:#33425E; --chip:#24304A; color-scheme:dark}
+  --star:#F7C548; --key:#222D42; --key-edge:#33425E; --chip:#24304A;
+  --m0:#6B3330; --m1:#6A5622; --m2:#2F5A3A; --m3:#3E8F57; --m-ink:#E6ECF8; color-scheme:dark}
 
+[hidden]{display:none!important}
 html,body{height:100%;margin:0}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
 *{touch-action:manipulation;-webkit-user-select:none}
@@ -39,55 +43,68 @@ body{
   position:relative; max-width:520px; margin:0 auto; min-height:100%;
   padding-left:max(16px, env(safe-area-inset-left, 0px));
   padding-right:max(16px, env(safe-area-inset-right, 0px));
-  padding-block:14px 18px; display:flex; flex-direction:column; gap:14px; box-sizing:border-box;
+  padding-block:14px 18px; display:flex; flex-direction:column; box-sizing:border-box;
 }
 .page::before{content:"";position:absolute;top:0;bottom:0;left:max(8px, env(safe-area-inset-left,0px));width:2px;background:var(--margin);opacity:.7;pointer-events:none}
 h1,h2{font-family:var(--display);color:var(--ink);margin:0;text-wrap:balance;font-weight:700}
 h1{font-size:2rem;line-height:1.1}
-h2{font-size:1.35rem}
+h2{font-size:1.3rem}
 p{margin:0;line-height:1.5}
 .screen{display:flex;flex-direction:column;gap:16px;flex:1}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
-
-/* top bar */
 .bar{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.icon-btn{width:44px;height:44px;border-radius:12px;background:var(--key);border:2px solid var(--key-edge);font-size:1.2rem;display:grid;place-items:center}
-
-/* start */
-.lead{color:var(--ink-soft);font-weight:700}
+.bar .btns{display:flex;gap:8px}
+.icon-btn{width:44px;height:44px;border-radius:12px;background:var(--key);border:2px solid var(--key-edge);font-size:1.2rem;display:grid;place-items:center;flex:none}
+.icon-btn.off{opacity:.45}
+.lead{color:var(--ink-soft);font-weight:800}
+.block{display:flex;flex-direction:column;gap:10px}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.seg.three{grid-template-columns:repeat(3,1fr)}
+.seg button{height:50px;border-radius:14px;background:var(--key);border:2px solid var(--key-edge);font-family:var(--display);font-size:1.15rem;font-weight:700;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.topics{display:flex;flex-direction:column;gap:8px}
+.topic{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;text-align:left;background:var(--key);border:2px solid var(--key-edge);border-radius:14px;padding:11px 14px;box-shadow:0 3px 0 var(--key-edge);transition:transform .08s}
+.topic:active{transform:translateY(2px)}
+.topic b{font-family:var(--display);font-size:1.08rem;color:var(--text);font-weight:700;line-height:1.25}
+.topic .ex{font-family:var(--display);color:var(--ink);font-size:1.05rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.topic small{grid-column:1/-1;color:var(--ink-soft);font-weight:700;font-size:.8rem}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{min-height:96px;text-align:left;padding:12px 14px;border-radius:16px;background:var(--chip);border:2px solid var(--key-edge);display:flex;flex-direction:column;gap:4px}
+.tile b{font-family:var(--display);font-size:1.15rem;color:var(--ink);font-weight:700}
+.tile span{font-size:.85rem;color:var(--ink-soft);font-weight:700;line-height:1.3}
 .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.chip{
-  font-family:var(--display);font-size:1.6rem;font-weight:700;height:62px;border-radius:14px;
-  background:var(--key);border:2px solid var(--key-edge);color:var(--ink);transition:transform .12s;
-}
+.chip{font-family:var(--display);font-size:1.6rem;font-weight:700;height:62px;border-radius:14px;background:var(--key);border:2px solid var(--key-edge);color:var(--ink);transition:transform .12s}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .chip:active{transform:scale(.95)}
-.chip small{display:block;font-family:var(--body);font-size:.7rem;font-weight:800;opacity:.8;margin-top:-4px}
+.chip small{display:block;font-family:var(--body);font-size:.66rem;font-weight:800;opacity:.85;margin-top:-4px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .link{color:var(--ink);font-weight:800;text-decoration:underline;text-underline-offset:3px;padding:6px 2px}
-.big{
-  font-family:var(--display);font-size:1.5rem;font-weight:700;width:100%;padding:16px;border-radius:18px;
-  background:var(--ok);color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--ok) 60%,#000);transition:transform .1s,box-shadow .1s;
-}
+.big{font-family:var(--display);font-size:1.4rem;font-weight:700;width:100%;padding:15px;border-radius:18px;background:var(--ok);color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--ok) 60%,#000);transition:transform .1s,box-shadow .1s}
 .big:active{transform:translateY(4px);box-shadow:0 1px 0 color-mix(in srgb,var(--ok) 60%,#000)}
 .big:disabled{opacity:.45;cursor:default}
 .big.alt{background:var(--key);color:var(--ink);border:2px solid var(--key-edge);box-shadow:0 5px 0 var(--key-edge)}
-.crib{background:var(--key);border:2px dashed var(--key-edge);border-radius:16px;padding:14px 16px}
+.big.small{font-size:1.15rem;padding:12px}
+.card{background:var(--key);border:2px dashed var(--key-edge);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
 .crib-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
 .crib-tabs button{min-width:40px;height:36px;border-radius:10px;background:var(--chip);font-weight:800;color:var(--ink)}
 .crib-tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
-.crib-list{columns:2;column-gap:20px;font-family:var(--display);font-size:1.15rem;line-height:1.75;font-variant-numeric:tabular-nums;color:var(--text);margin-top:6px}
+.crib-list{columns:2;column-gap:20px;font-family:var(--display);font-size:1.15rem;line-height:1.75;font-variant-numeric:tabular-nums}
 .crib-list b{color:var(--ink)}
+.note{color:var(--ink-soft);font-size:.9rem;text-align:center;font-weight:700}
 
 /* play */
-.stars{display:flex;gap:4px;justify-content:center}
-.stars span{width:26px;height:26px;display:grid;place-items:center;font-size:1.25rem;color:var(--key-edge);transition:transform .3s}
-.stars span.on{color:var(--star);transform:scale(1.15)}
+.stars{display:flex;gap:3px;justify-content:center;flex-wrap:wrap}
+.stars span{width:24px;height:24px;display:grid;place-items:center;font-size:1.2rem;color:var(--key-edge);transition:transform .3s}
+.stars span.on{color:var(--star);transform:scale(1.12)}
 .stars span.miss{color:var(--oops);opacity:.6}
 .stars span.cur{outline:2px solid var(--ink);outline-offset:1px;border-radius:50%}
-.board{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:170px}
-.eq{font-family:var(--display);font-weight:700;font-size:clamp(2.8rem,14vw,4.4rem);color:var(--text);display:flex;align-items:center;gap:.25em;font-variant-numeric:tabular-nums;line-height:1}
+.board{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:180px}
+.story{font-family:var(--display);font-size:1.2rem;line-height:1.5;text-align:center;max-width:34ch;color:var(--text);background:var(--key);border:2px solid var(--key-edge);border-radius:16px;padding:12px 14px}
+.eq{font-family:var(--display);font-weight:700;font-size:clamp(2.8rem,14vw,4.4rem);color:var(--text);display:flex;align-items:center;gap:.22em;font-variant-numeric:tabular-nums;line-height:1;flex-wrap:nowrap}
+.eq.mid{font-size:clamp(2.2rem,11vw,3.5rem)}
+.eq.small{font-size:clamp(1.8rem,9vw,2.9rem)}
+.eq .lbl{font-size:.5em;color:var(--ink-soft)}
 .slot{min-width:1.9em;padding:0 .15em;height:1.25em;border-bottom:5px solid var(--ink);color:var(--ink);display:grid;place-items:center;transition:background .2s}
 .slot.ok{color:var(--ok);border-color:var(--ok);background:var(--ok-bg);border-radius:10px 10px 0 0}
 .slot.no{color:var(--oops);border-color:var(--oops);background:var(--oops-bg);border-radius:10px 10px 0 0}
@@ -95,14 +112,10 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 @keyframes blink{50%{opacity:0}}
 .msg{min-height:3.2em;text-align:center;font-weight:800;font-size:1.15rem}
 .msg.ok{color:var(--ok)} .msg.no{color:var(--oops)}
-.msg .fix{display:block;font-family:var(--display);font-size:1.4rem;color:var(--text)}
-.streak{font-weight:800;color:var(--ink-soft);font-size:.9rem}
+.msg .fix{display:block;font-family:var(--display);font-size:1.35rem;color:var(--text)}
+.streak{font-weight:800;color:var(--ink-soft);font-size:.9rem;min-height:1.2em}
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.key{
-  height:clamp(54px,9vh,68px);border-radius:16px;background:var(--key);border:2px solid var(--key-edge);
-  font-family:var(--display);font-size:1.9rem;font-weight:700;color:var(--text);
-  box-shadow:0 4px 0 var(--key-edge);transition:transform .08s,box-shadow .08s;
-}
+.key{height:clamp(52px,8.5vh,66px);border-radius:16px;background:var(--key);border:2px solid var(--key-edge);font-family:var(--display);font-size:1.9rem;font-weight:700;color:var(--text);box-shadow:0 4px 0 var(--key-edge);transition:transform .08s,box-shadow .08s}
 .key:active{transform:translateY(3px);box-shadow:0 1px 0 var(--key-edge)}
 .key.go{background:var(--ok);border-color:var(--ok);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--ok) 60%,#000)}
 .key.del{color:var(--ink-soft);font-size:1.5rem}
@@ -113,43 +126,89 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 
 /* result */
 .medal{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;padding-top:10px}
-.medal .big-stars{font-size:3.4rem;letter-spacing:.1em;color:var(--key-edge)}
-.medal .big-stars .on{color:var(--star)}
+.big-stars{font-size:3.4rem;letter-spacing:.1em;color:var(--key-edge)}
+.big-stars .on{color:var(--star)}
 .score{font-family:var(--display);font-size:3rem;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
-.review{background:var(--key);border:2px solid var(--key-edge);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
-.review li{font-family:var(--display);font-size:1.25rem;font-variant-numeric:tabular-nums}
-.review ul{margin:0;padding-left:1.1em;columns:2}
-.review s{color:var(--oops);font-size:.9em;margin-left:.4em}
-.note{color:var(--ink-soft);font-size:.9rem;text-align:center}
-.block{display:flex;flex-direction:column;gap:10px}
-.chip.op{font-size:2rem}
-.chip.op small{font-size:.62rem}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.seg button{height:52px;border-radius:14px;background:var(--key);border:2px solid var(--key-edge);font-family:var(--display);font-size:1.4rem;font-weight:700;color:var(--ink)}
-.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.review ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.review li{font-family:var(--display);font-size:1.15rem;font-variant-numeric:tabular-nums;line-height:1.4}
+.review li small{display:block;font-family:var(--body);font-size:.85rem;color:var(--ink-soft);font-weight:700}
+
+/* map */
+.mapgrid{display:grid;grid-template-columns:repeat(11,1fr);gap:3px}
+.mapgrid div{aspect-ratio:1;display:grid;place-items:center;border-radius:6px;font-size:clamp(.62rem,2.6vw,.85rem);font-weight:800;font-variant-numeric:tabular-nums;color:var(--m-ink)}
+.mapgrid .h{color:var(--ink);font-family:var(--display);font-size:clamp(.8rem,3.2vw,1rem)}
+.mapgrid .c-u{background:var(--chip);color:var(--ink-soft)}
+.mapgrid .c-0{background:var(--m0)} .mapgrid .c-1{background:var(--m1)} .mapgrid .c-2{background:var(--m2)} .mapgrid .c-3{background:var(--m3)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:.85rem;font-weight:700;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px}
+
+/* parents */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--key);border:2px solid var(--key-edge);border-radius:14px;padding:12px}
+.stat b{display:block;font-family:var(--display);font-size:1.7rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.stat span{font-size:.85rem;font-weight:700;color:var(--ink-soft)}
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:120px}
+.bars .col{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.bars .b{width:100%;max-width:34px;background:var(--ink);border-radius:6px 6px 2px 2px;min-height:3px;opacity:.85}
+.bars .col span{font-size:.75rem;font-weight:800;color:var(--ink-soft)}
+.bars .col em{font-style:normal;font-size:.72rem;font-weight:800;color:var(--ink)}
+.weak li{font-family:var(--display);font-size:1.1rem;font-variant-numeric:tabular-nums}
+.weak li small{font-family:var(--body);color:var(--ink-soft);font-weight:700;margin-left:6px;font-size:.82rem}
+.weak ul{margin:0;padding-left:1.1em}
+.confirm{display:flex;flex-direction:column;gap:8px;background:var(--oops-bg);border-radius:14px;padding:12px}
+.danger{color:var(--oops);font-weight:800;text-decoration:underline;text-underline-offset:3px;padding:6px 2px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--text);color:var(--paper);padding:10px 16px;border-radius:12px;font-weight:800;max-width:calc(100% - 32px);text-align:center;z-index:20}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="page">
 
-  <!-- START -->
-  <section class="screen" id="start">
+  <!-- HOME -->
+  <section class="screen" id="home">
     <div class="bar">
       <h1>Математика<br>в клітинку</h1>
-      <button class="icon-btn" id="soundBtn" aria-label="Звук">🔊</button>
+      <div class="btns">
+        <button class="icon-btn" id="voiceBtn" aria-label="Голос">🗣️</button>
+        <button class="icon-btn" id="soundBtn" aria-label="Звук">🔊</button>
+      </div>
     </div>
 
     <div class="block">
-      <p class="lead">Що будемо тренувати?</p>
+      <p class="lead">Мій клас</p>
+      <div class="seg" id="classSeg"></div>
+    </div>
+
+    <div class="block">
+      <p class="lead" id="classLead">Теми 2 класу</p>
+      <div class="topics" id="topics"></div>
+      <button class="big" id="mixBtn">Змішане повторення</button>
+    </div>
+
+    <div class="tiles">
+      <button class="tile" id="wordsTile"><b>Задачі</b><span>Задачі словами про город, кошики й цукерки</span></button>
+      <button class="tile" id="freeTile"><b>Своє тренування</b><span>Обери дії та таблиці сам</span></button>
+      <button class="tile" id="mapTile"><b>Карта знань</b><span>Що вже вивчено в таблиці множення</span></button>
+      <button class="tile" id="parentTile"><b>Для батьків</b><span>Час занять, успіхи і важкі приклади</span></button>
+    </div>
+    <p class="note" id="voiceNote" hidden></p>
+  </section>
+
+  <!-- FREE -->
+  <section class="screen" id="free" hidden>
+    <div class="bar">
+      <button class="icon-btn" data-back aria-label="Назад">←</button>
+      <h2>Своє тренування</h2>
+      <span style="width:44px"></span>
+    </div>
+    <div class="block">
+      <p class="lead">Що тренуємо?</p>
       <div class="chips" id="ops"></div>
     </div>
-
     <div class="block" id="rangeBlock">
       <p class="lead">Додаємо і віднімаємо числа до:</p>
-      <div class="seg" id="ranges"></div>
+      <div class="seg three" id="ranges"></div>
     </div>
-
     <div class="block" id="tableBlock">
       <p class="lead">Які таблиці множення та ділення?</p>
       <div class="chips" id="chips"></div>
@@ -158,15 +217,12 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
         <button class="link" id="noneBtn">Прибрати всі</button>
       </div>
     </div>
-
-    <div class="crib" id="crib">
+    <div class="card" id="crib">
       <h2>Шпаргалка</h2>
       <div class="crib-tabs" id="cribTabs" role="group" aria-label="Таблиця для перегляду"></div>
       <div class="crib-list" id="cribList"></div>
     </div>
-
     <button class="big" id="goBtn">Почати! 10 прикладів</button>
-    <p class="note" id="best"></p>
   </section>
 
   <!-- PLAY -->
@@ -174,11 +230,13 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
     <div class="bar">
       <button class="icon-btn" id="backBtn" aria-label="Назад">←</button>
       <div class="stars" id="stars"></div>
-      <span class="streak" id="streak" style="min-width:44px;text-align:right"></span>
+      <button class="icon-btn" id="sayBtn" aria-label="Прочитати ще раз">🔈</button>
     </div>
     <div class="board">
-      <div class="eq" id="eq"><span id="qa">7</span><span id="qop">×</span><span id="qb">8</span><span>=</span><span class="slot" id="slot"></span></div>
+      <p class="story" id="story" hidden></p>
+      <div class="eq" id="eq"></div>
       <div class="msg" id="msg" aria-live="polite"></div>
+      <span class="streak" id="streak"></span>
     </div>
     <div class="pad" id="pad"></div>
   </section>
@@ -190,15 +248,67 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
       <div class="score" id="score">8 / 10</div>
       <h2 id="praise">Чудова робота!</h2>
     </div>
-    <div class="review" id="review" hidden>
+    <div class="card review" id="review" hidden>
       <h2>Ці приклади варто повторити</h2>
       <ul id="reviewList"></ul>
     </div>
     <button class="big" id="fixBtn" hidden>Потренувати помилки</button>
     <button class="big" id="againBtn">Ще раз</button>
-    <button class="big alt" id="homeBtn">Змінити налаштування</button>
+    <button class="big alt" id="homeBtn">На головну</button>
+  </section>
+
+  <!-- MAP -->
+  <section class="screen" id="map" hidden>
+    <div class="bar">
+      <button class="icon-btn" data-back aria-label="Назад">←</button>
+      <h2>Карта знань</h2>
+      <span style="width:44px"></span>
+    </div>
+    <div class="seg" style="grid-template-columns:1fr 1fr" id="mapSeg">
+      <button data-map="mul" aria-pressed="true">× Множення</button>
+      <button data-map="add">+ Додавання</button>
+    </div>
+    <p class="lead" id="mapLead"></p>
+    <div class="mapgrid" id="mapGrid"></div>
+    <div class="legend">
+      <span><i style="background:var(--chip)"></i>ще не було</span>
+      <span><i style="background:var(--m0)"></i>важко</span>
+      <span><i style="background:var(--m1)"></i>вчимо</span>
+      <span><i style="background:var(--m2)"></i>майже</span>
+      <span><i style="background:var(--m3)"></i>вивчено</span>
+    </div>
+    <button class="big" id="mapTrain">Потренувати жовті й червоні</button>
+  </section>
+
+  <!-- PARENTS -->
+  <section class="screen" id="parents" hidden>
+    <div class="bar">
+      <button class="icon-btn" data-back aria-label="Назад">←</button>
+      <h2>Для батьків</h2>
+      <span style="width:44px"></span>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="card">
+      <h2>Хвилини занять за 7 днів</h2>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="card weak">
+      <h2>Що дається найважче</h2>
+      <ul id="weakList"></ul>
+      <button class="big small" id="weakBtn">Потренувати ці приклади</button>
+    </div>
+    <p class="note">Усі дані зберігаються тільки на цьому пристрої й нікуди не надсилаються.</p>
+    <button class="danger" id="resetBtn">Скинути весь прогрес</button>
+    <div class="confirm" id="resetBox" hidden>
+      <p><b>Видалити всю історію занять?</b> Карта знань і статистика почнуться з нуля.</p>
+      <div class="row">
+        <button class="big small" id="resetYes" style="background:var(--oops);box-shadow:none;flex:1">Так, видалити</button>
+        <button class="big small alt" id="resetNo" style="flex:1">Скасувати</button>
+      </div>
+    </div>
   </section>
 </div>
+<div class="toast" id="toast" hidden></div>
 
 <script>
 (function(){
@@ -207,239 +317,414 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
     get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
     set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
   };
-  const OPS=[
-    {id:'+',name:'додавання'},
-    {id:'−',name:'віднімання'},
-    {id:'×',name:'множення'},
-    {id:'÷',name:'ділення'}
-  ];
-  const RANGES=[10,20,100];
-  const NUMS=[2,3,4,5,6,7,8,9,10,1];
+  const DEF={sound:true,voice:true,cls:2,ops:['×'],range:20,sel:[2,3]};
+  const set=Object.assign({},DEF,store.get('mk-set',{}));
+  if(!store.get('mk-set',null)){
+    set.ops=store.get('mx-ops',set.ops); set.range=store.get('mx-range',set.range);
+    set.sel=store.get('mx-sel',set.sel); set.sound=store.get('mx-sound',set.sound);
+  }
+  if(set.ops.includes('÷')) set.ops=set.ops.map(o=>o==='÷'?':':o);
+  let facts=store.get('mk-facts',{}), mulS=store.get('mk-mul',{}), addS=store.get('mk-add',{}), days=store.get('mk-days',{});
+  const saveSet=()=>store.set('mk-set',set);
+  function saveData(){
+    const ks=Object.keys(facts);
+    if(ks.length>1500){ ks.sort((a,b)=>facts[a].last-facts[b].last).slice(0,ks.length-1500).forEach(k=>delete facts[k]); }
+    const dk=Object.keys(days).sort(); while(dk.length>90) delete days[dk.shift()];
+    store.set('mk-facts',facts); store.set('mk-mul',mulS); store.set('mk-add',addS); store.set('mk-days',days);
+  }
 
-  let ops = new Set(store.get('mx-ops',['×']));
-  let range = store.get('mx-range',10);
-  let selected = new Set(store.get('mx-sel',[2,3]));
-  let sound = store.get('mx-sound',true);
-  let cribN = [...selected][0] || 2;
-  const usesTables = () => ops.has('×') || ops.has('÷');
-  const usesRange = () => ops.has('+') || ops.has('−');
-  function save(){ store.set('mx-ops',[...ops]); store.set('mx-range',range); store.set('mx-sel',[...selected]); }
-
-  // ---- sound
-  let ac=null;
-  function beep(ok){
-    if(!sound) return;
-    try{
-      ac = ac || new (window.AudioContext||window.webkitAudioContext)();
-      const notes = ok ? [660,880] : [300,240];
-      notes.forEach((f,i)=>{
-        const o=ac.createOscillator(), g=ac.createGain();
-        o.type = ok?'triangle':'sine'; o.frequency.value=f;
-        const t=ac.currentTime+i*0.11;
-        g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.18,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
-        o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.22);
-      });
-    }catch(e){}
-  }
-  function renderSound(){ $('soundBtn').textContent = sound?'🔊':'🔇'; $('soundBtn').setAttribute('aria-label', sound?'Вимкнути звук':'Увімкнути звук'); }
-  $('soundBtn').onclick=()=>{sound=!sound;store.set('mx-sound',sound);renderSound();};
-
-  // ---- start screen
-  function renderOps(){
-    const box=$('ops'); box.innerHTML='';
-    OPS.forEach(o=>{
-      const b=document.createElement('button');
-      b.className='chip op'; b.setAttribute('aria-pressed',ops.has(o.id));
-      b.innerHTML = o.id + '<small>'+o.name+'</small>';
-      b.setAttribute('aria-label',o.name);
-      b.onclick=()=>{ ops.has(o.id)?ops.delete(o.id):ops.add(o.id); save(); renderAll(); };
-      box.appendChild(b);
-    });
-  }
-  function renderRanges(){
-    const box=$('ranges'); box.innerHTML='';
-    RANGES.forEach(r=>{
-      const b=document.createElement('button');
-      b.textContent=r; b.setAttribute('aria-pressed',r===range);
-      b.onclick=()=>{range=r;save();renderRanges();};
-      box.appendChild(b);
-    });
-  }
-  function renderChips(){
-    const box=$('chips'); box.innerHTML='';
-    NUMS.forEach(n=>{
-      const b=document.createElement('button');
-      b.className='chip'; b.setAttribute('aria-pressed',selected.has(n));
-      b.innerHTML = n + '<small>на '+n+'</small>';
-      b.setAttribute('aria-label','Таблиця на '+n);
-      b.onclick=()=>{ selected.has(n)?selected.delete(n):selected.add(n); cribN=n; save(); renderAll(); };
-      box.appendChild(b);
-    });
-  }
-  function renderCrib(){
-    const tabs=$('cribTabs'); tabs.innerHTML='';
-    [...NUMS].sort((a,b)=>a-b).forEach(n=>{
-      const b=document.createElement('button'); b.textContent=n;
-      b.setAttribute('aria-pressed',n===cribN);
-      b.onclick=()=>{cribN=n;renderCrib();};
-      tabs.appendChild(b);
-    });
-    const div = ops.has('÷') && !ops.has('×');
-    let h='';
-    for(let i=1;i<=10;i++) h += div
-      ? `<div>${cribN*i} ÷ ${cribN} = <b>${i}</b></div>`
-      : `<div>${cribN} × ${i} = <b>${cribN*i}</b></div>`;
-    $('cribList').innerHTML=h;
-  }
-  function renderGo(){
-    const go=$('goBtn');
-    let why='';
-    if(ops.size===0) why='Обери хоча б одну дію';
-    else if(usesTables() && selected.size===0) why='Обери хоча б одну таблицю';
-    go.disabled = !!why;
-    go.textContent = why || 'Почати! 10 прикладів';
-    const best=store.get('mx-best',0);
-    $('best').textContent = best ? `Найкращий результат: ${best} з 10 ⭐` : 'Відповідай без поспіху. Помилки допомагають вчитися!';
-  }
-  function renderAll(){
-    renderOps(); renderRanges(); renderChips(); renderCrib(); renderGo();
-    $('rangeBlock').hidden = !usesRange();
-    $('tableBlock').hidden = !usesTables();
-    $('crib').hidden = !usesTables();
-  }
-  $('allBtn').onclick=()=>{NUMS.forEach(n=>selected.add(n));save();renderAll();};
-  $('noneBtn').onclick=()=>{selected.clear();save();renderAll();};
-
-  // ---- questions
+  // ---------- helpers
   const rnd=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
   function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-  const answer=q=> q.op==='+'?q.a+q.b : q.op==='−'?q.a-q.b : q.op==='×'?q.a*q.b : q.a/q.b;
-  const key=q=>q.a+q.op+q.b;
-  function makeOne(op){
-    const tabs=[...selected];
-    if(op==='×'){ const t=tabs[rnd(0,tabs.length-1)], b=rnd(1,10); return Math.random()<.5?{a:t,op,b}:{a:b,op,b:t}; }
-    if(op==='÷'){ const t=tabs[rnd(0,tabs.length-1)], b=rnd(1,10); return {a:t*b,op,b:t}; }
-    const lo = range===100?5:range===20?2:0;
-    if(op==='+'){ const s=rnd(Math.max(lo*2,1),range), a=rnd(lo,s-lo); return {a,op,b:s-a}; }
-    const a=rnd(Math.max(lo*2,1),range), b=rnd(lo,a-lo); return {a,op,b};
+  function P(n,one,few,many){const m10=n%10,m100=n%100; if(m10===1&&m100!==11)return one; if(m10>=2&&m10<=4&&(m100<12||m100>14))return few; return many;}
+  const calc=(a,op,b)=>op==='+'?a+b:op==='−'?a-b:op==='×'?a*b:a/b;
+  const pairKey=(x,y)=>Math.min(x,y)+'x'+Math.max(x,y);
+  function dayKey(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  let toastT=null;
+  function toast(t){const el=$('toast');el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600);}
+
+  // ---------- questions
+  function tag(q,a,op,b){
+    const r=calc(a,op,b);
+    if(op==='×'&&a>=1&&b>=1&&a<=10&&b<=10) q.mul=[a,b];
+    if(op===':'&&b>=1&&b<=10&&r>=1&&r<=10) q.mul=[b,r];
+    if(op==='+'&&a>=1&&b>=1&&a<=10&&b<=10) q.add=[a,b];
+    if(op==='−'&&b>=1&&b<=10&&r>=1&&r<=10) q.add=[b,r];
+    return q;
   }
-  function makeRound(pool){
-    const out=[];
-    if(pool){
-      for(let i=0;i<10;i++) out.push(pool[i%pool.length]);
-      return shuffle(out);
+  function eqQ(a,op,b){ return tag({tokens:[a,op,b,'=','?'],ans:calc(a,op,b)},a,op,b); }
+  function missQ(a,op,b){
+    const r=calc(a,op,b), hideA=Math.random()<.5;
+    return tag({tokens:hideA?['?',op,b,'=',r]:[a,op,'?','=',r],ans:hideA?a:b},a,op,b);
+  }
+  const tab=ts=>{const t=pick(ts),b=rnd(1,10);return Math.random()<.5?eqQ(t,'×',b):eqQ(b,'×',t);};
+  const divT=ts=>{const t=pick(ts),q=rnd(1,10);return eqQ(t*q,':',t);};
+  const T25=[2,3,4,5], T69=[6,7,8,9], T29=[2,3,4,5,6,7,8,9];
+
+  const GEN={
+    add10:()=>{const a=rnd(1,9);return eqQ(a,'+',rnd(1,10-a));},
+    sub10:()=>{const a=rnd(2,10);return eqQ(a,'−',rnd(1,a));},
+    add20:()=>{const a=rnd(2,9);return eqQ(a,'+',rnd(11-a,9));},
+    sub20:()=>{const a=rnd(11,18);return eqQ(a,'−',rnd(a-9,9));},
+    win1:()=>{if(Math.random()<.5){const a=rnd(1,8);return missQ(a,'+',rnd(1,10-a));}const a=rnd(3,10);return missQ(a,'−',rnd(1,a-1));},
+    add100:()=>{const a=rnd(10,89);return eqQ(a,'+',rnd(2,99-a));},
+    sub100:()=>{const a=rnd(20,99);return eqQ(a,'−',rnd(2,a-2));},
+    mul25:()=>tab(T25), div25:()=>divT(T25),
+    win2:()=>{if(Math.random()<.5){const a=rnd(10,80);return missQ(a,'+',rnd(2,99-a));}return missQ(pick(T25),'×',rnd(2,10));},
+    mul69:()=>tab(T69), div69:()=>divT(T69),
+    mulx:()=>{const a=rnd(11,49);return eqQ(a,'×',rnd(2,Math.floor(99/a)));},
+    divx:()=>{const q=rnd(11,49),b=rnd(2,Math.floor(99/q));return eqQ(q*b,':',b);},
+    win3:()=>{const t=pick(T29),q=rnd(2,10);return Math.random()<.5?missQ(t,'×',q):missQ(t*q,':',t);},
+    as1000:()=>{if(Math.random()<.5){const a=rnd(100,899);return eqQ(a,'+',rnd(10,999-a));}const a=rnd(200,999);return eqQ(a,'−',rnd(10,a-10));},
+    mul3:()=>{const a=rnd(101,333);return eqQ(a,'×',rnd(2,Math.floor(999/a)));},
+    div3:()=>{const q=rnd(101,333),b=rnd(2,Math.floor(999/q));return eqQ(q*b,':',b);},
+    win4:()=>{if(Math.random()<.5){const a=rnd(100,800);return missQ(a,'+',rnd(10,999-a));}return missQ(rnd(11,99),'×',pick(T29));},
+    words:()=>wordQ(set.cls),
+    free:()=>freeQ()
+  };
+
+  const CLASSES={
+    1:[['add10','Додавання до 10','4 + 5'],['sub10','Віднімання до 10','9 − 3'],['add20','Додавання з переходом через десяток','8 + 5'],['sub20','Віднімання з переходом через десяток','14 − 6'],['win1','Яке число у віконці?','6 + □ = 9']],
+    2:[['add100','Додавання до 100','47 + 25'],['sub100','Віднімання до 100','83 − 36'],['mul25','Множення на 2, 3, 4, 5','4 × 7'],['div25','Ділення на 2, 3, 4, 5','35 : 5'],['win2','Яке число у віконці?','□ × 4 = 20']],
+    3:[['mul69','Множення на 6, 7, 8, 9','7 × 8'],['div69','Ділення на 6, 7, 8, 9','54 : 9'],['mulx','Позатабличне множення','23 × 4'],['divx','Позатабличне ділення','84 : 4'],['win3','Яке число у віконці?','56 : □ = 8']],
+    4:[['as1000','Додавання і віднімання до 1000','465 + 287'],['mul3','Множення на одноцифрове число','124 × 3'],['div3','Ділення на одноцифрове число','846 : 2'],['win4','Яке число у віконці?','□ + 350 = 920']]
+  };
+
+  // word problems
+  // word problems: [найбільше число, яке пасує до сюжету, текст]
+  const WT={
+    '+':[
+      [30,(a,b)=>`На гілці сиділо ${a} ${P(a,'горобець','горобці','горобців')}. Прилетіло ще ${b}. Скільки горобців стало на гілці?`],
+      [100,(a,b)=>`Тарас зібрав ${a} ${P(a,'яблуко','яблука','яблук')}, а Оксанка — ${b}. Скільки яблук зібрали діти разом?`],
+      [1000,(a,b)=>`У шкільній бібліотеці було ${a} ${P(a,'книжка','книжки','книжок')}. Привезли ще ${b}. Скільки книжок стало в бібліотеці?`],
+      [30,(a,b)=>`Улітку Марійка прочитала ${a} ${P(a,'казку','казки','казок')}, а восени — ще ${b}. Скільки казок вона прочитала?`],
+      [1000,(a,b)=>`Навесні учні посадили ${a} ${P(a,'дерево','дерева','дерев')}, а восени — ще ${b}. Скільки дерев посадили учні?`]
+    ],
+    '−':[
+      [50,(a,b)=>`У кошику було ${a} ${P(a,'груша','груші','груш')}. Мама взяла ${b} для компоту. Скільки груш залишилось у кошику?`],
+      [1000,(a,b)=>`Оля мала ${a} ${P(a,'гривню','гривні','гривень')}. Вона купила книжку за ${b} ${P(b,'гривню','гривні','гривень')}. Скільки гривень у неї залишилось?`],
+      [1000,(a,b)=>`У книжці ${a} ${P(a,'сторінка','сторінки','сторінок')}. Сашко вже прочитав ${b}. Скільки сторінок йому залишилось прочитати?`]
+    ],
+    '×':[
+      [100,(a,b)=>`У бабусі на городі ${a} ${P(a,'грядка','грядки','грядок')}. На кожній грядці росте ${b} ${P(b,'кущ','кущі','кущів')} полуниці. Скільки всього кущів полуниці?`],
+      [1000,(a,b)=>`В одній коробці ${b} ${P(b,'олівець','олівці','олівців')}. Скільки олівців у ${a} таких коробках?`],
+      [1000,(a,b)=>`Квиток на карусель коштує ${b} ${P(b,'гривню','гривні','гривень')}. Скільки гривень коштують ${a} ${P(a,'квиток','квитки','квитків')}?`]
+    ],
+    ':':[
+      [200,(a,b)=>`${a} ${P(a,'цукерку','цукерки','цукерок')} розділили порівну між ${b} дітьми. Скільки цукерок отримала кожна дитина?`],
+      [100,(a,b)=>`Тато розклав ${a} ${P(a,'яблуко','яблука','яблук')} порівну в ${b} ${P(b,'кошик','кошики','кошиків')}. Скільки яблук у кожному кошику?`],
+      [1000,(a,b)=>`Стрічку завдовжки ${a} см розрізали на шматки по ${b} см. Скільки вийшло шматків?`]
+    ]
+  };
+  function wordQ(cls){
+    const ops = cls===1?['+','−']:['+','−','×',':'];
+    const max = cls===1?20:cls===4?1000:100;
+    const tables = cls===2?T25:T29;
+    const op=pick(ops); let a,b;
+    if(op==='+'){a=rnd(2,max-2);b=rnd(2,max-a);}
+    else if(op==='−'){a=rnd(4,max);b=rnd(2,a-2);}
+    else if(op==='×'){ if(cls===4){a=pick(T29);b=rnd(11,99);} else {a=rnd(2,9);b=pick(tables);} }
+    else { const d=pick(tables), q=cls===4?rnd(11,99):rnd(2,10); a=d*q; b=d; }
+    const ans=calc(a,op,b), big=Math.max(a,b,ans);
+    const fit=WT[op].filter(t=>t[0]>=big);
+    const text=pick(fit.length?fit:WT[op].slice(-1))[1](a,b);
+    return tag({tokens:['?'],ans,text},a,op,b);
+  }
+
+  // free training
+  const OPS=[{id:'+',name:'додавання'},{id:'−',name:'віднімання'},{id:'×',name:'множення'},{id:':',name:'ділення'}];
+  const NUMS=[2,3,4,5,6,7,8,9,10,1];
+  function freeQ(){
+    const op=pick(set.ops.length?set.ops:['×']); const tabs=set.sel.length?set.sel:[2];
+    if(op==='×') return tab(tabs);
+    if(op===':') return divT(tabs);
+    const r=set.range, lo=r===100?5:r===20?2:0;
+    if(op==='+'){const s=rnd(Math.max(lo*2,1),r),a=rnd(lo,s-lo);return eqQ(a,'+',s-a);}
+    const a=rnd(Math.max(lo*2,1),r);return eqQ(a,'−',rnd(lo,a-lo));
+  }
+
+  function genQ(id){ const q=GEN[id](); q.topic=id; q.key=q.text?('w:'+q.text):q.tokens.join(' '); return q; }
+  const BOX_W=[6,4,3,2,1,.6];
+  const weight=q=>{const f=facts[q.key];return f?BOX_W[f.box]:3;};
+  function wpick(pool,n){
+    const out=[];pool=pool.slice();
+    while(out.length<n&&pool.length){
+      const ws=pool.map(weight),tot=ws.reduce((s,w)=>s+w,0);let r=Math.random()*tot,i=0;
+      for(;i<pool.length-1;i++){r-=ws[i];if(r<=0)break;}
+      out.push(pool.splice(i,1)[0]);
     }
-    const list=[...ops], seen=new Set();
-    let tries=0;
-    while(out.length<10 && tries<500){
-      tries++;
-      const q=makeOne(list[out.length%list.length]);
-      if(seen.has(key(q)) && tries<400) continue;
-      seen.add(key(q)); out.push(q);
-    }
+    return out;
+  }
+  function buildRound(ids){
+    const due=Object.values(facts).filter(f=>f.seen>0&&f.box===0&&ids.includes(f.q.topic))
+      .sort((x,y)=>y.last-x.last).slice(0,3).map(f=>Object.assign({},f.q));
+    const used=new Set(due.map(q=>q.key)), cands=[];
+    for(let i=0;i<60;i++){const q=genQ(ids[i%ids.length]); if(!used.has(q.key)){used.add(q.key);cands.push(q);}}
+    const out=due.concat(wpick(cands,10-due.length));
+    while(out.length<10) out.push(genQ(pick(ids)));
     return shuffle(out);
   }
 
-  // ---- game
-  let queue=[], idx=0, input='', results=[], streak=0, locked=false, lastPool=null;
-  const PRAISE=['Молодець!','Правильно!','Чудово!','Супер!','Так тримати!','Розумниця!','Блискуче!'];
-  function show(id){ ['start','play','result'].forEach(s=>$(s).hidden = s!==id); window.scrollTo(0,0); }
+  // ---------- learning records
+  function bump(rec,ok){rec.seen=(rec.seen||0)+1; if(ok){rec.ok=(rec.ok||0)+1;rec.box=Math.min(5,(rec.box||0)+1);} else {rec.ok=rec.ok||0;rec.box=0;} rec.last=Date.now(); return rec;}
+  function record(q,ok){
+    const f=facts[q.key]||{q:{tokens:q.tokens,ans:q.ans,text:q.text,topic:q.topic,key:q.key,mul:q.mul,add:q.add},box:0,seen:0,ok:0};
+    f.q.topic=q.topic; facts[q.key]=bump(f,ok);
+    if(q.mul){const k=pairKey(q.mul[0],q.mul[1]);mulS[k]=bump(mulS[k]||{},ok);}
+    if(q.add){const k=pairKey(q.add[0],q.add[1]);addS[k]=bump(addS[k]||{},ok);}
+    const d=days[dayKey()]||(days[dayKey()]={sec:0,rounds:0,q:0,ok:0}); d.q++; if(ok)d.ok++;
+    saveData();
+  }
+  let t0=0;
+  function addTime(done){
+    if(!t0) return; const d=days[dayKey()]||(days[dayKey()]={sec:0,rounds:0,q:0,ok:0});
+    d.sec+=Math.min(900,Math.round((Date.now()-t0)/1000)); if(done) d.rounds++; t0=0; saveData();
+  }
 
-  function startRound(pool){
-    lastPool = pool||null;
-    queue = makeRound(pool); idx=0; results=[]; streak=0;
-    show('play'); nextQ();
+  // ---------- sound & voice
+  let ac=null;
+  function beep(ok){
+    if(!set.sound) return;
+    try{
+      ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+      (ok?[660,880]:[300,240]).forEach((f,i)=>{
+        const o=ac.createOscillator(),g=ac.createGain();o.type=ok?'triangle':'sine';o.frequency.value=f;
+        const t=ac.currentTime+i*.11;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.18,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.2);
+        o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.22);
+      });
+    }catch(e){}
+  }
+  const hasTTS='speechSynthesis' in window;
+  let ukVoice=null;
+  function loadVoices(){try{ukVoice=speechSynthesis.getVoices().find(v=>/^uk/i.test(v.lang))||null;}catch(e){}}
+  if(hasTTS){loadVoices();try{speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}}
+  function speak(t){
+    if(!set.voice||!hasTTS) return;
+    try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='uk-UA';if(ukVoice)u.voice=ukVoice;u.rate=.92;speechSynthesis.speak(u);}catch(e){}
+  }
+  const W={'+':'плюс','−':'мінус','×':'помножити на',':':'поділити на','=':'дорівнює','?':'віконце'};
+  function sayQ(q){
+    if(q.text) return q.text;
+    const w=t=>W[t]||String(t);
+    if(q.tokens[q.tokens.length-1]==='?') return 'Скільки буде '+q.tokens.slice(0,3).map(w).join(' ')+'?';
+    return q.tokens.map(w).join(' ')+'. Яке число у віконці?';
+  }
+  function renderToggles(){
+    $('soundBtn').textContent=set.sound?'🔊':'🔇';
+    $('soundBtn').setAttribute('aria-label',set.sound?'Вимкнути звук':'Увімкнути звук');
+    $('voiceBtn').classList.toggle('off',!set.voice);
+    $('voiceBtn').setAttribute('aria-label',set.voice?'Вимкнути голос':'Увімкнути голос');
+    $('sayBtn').hidden=!set.voice||!hasTTS;
+    const n=$('voiceNote');
+    if(!hasTTS){n.hidden=false;n.textContent='На цьому пристрої озвучка недоступна.';} else n.hidden=true;
+  }
+  $('soundBtn').onclick=()=>{set.sound=!set.sound;saveSet();renderToggles();};
+  $('voiceBtn').onclick=()=>{set.voice=!set.voice;saveSet();renderToggles();toast(set.voice?'Голос увімкнено: гра читатиме приклади вголос':'Голос вимкнено');if(set.voice)speak('Привіт! Я читатиму приклади вголос.');};
+
+  // ---------- navigation
+  const SCREENS=['home','free','play','result','map','parents'];
+  let ret='home';
+  function show(id){SCREENS.forEach(s=>$(s).hidden=s!==id);window.scrollTo(0,0);}
+  document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{renderHome();show('home');});
+
+  // ---------- home
+  function mastered(id){return Object.values(facts).filter(f=>f.q.topic===id&&f.box>=3).length;}
+  function renderHome(){
+    const seg=$('classSeg');seg.innerHTML='';
+    [1,2,3,4].forEach(c=>{const b=document.createElement('button');b.textContent=c+' клас';b.setAttribute('aria-pressed',c===set.cls);
+      b.onclick=()=>{set.cls=c;saveSet();renderHome();};seg.appendChild(b);});
+    $('classLead').textContent='Теми '+set.cls+' класу';
+    const box=$('topics');box.innerHTML='';
+    CLASSES[set.cls].forEach(([id,name,ex])=>{
+      const b=document.createElement('button');b.className='topic';
+      const m=mastered(id);
+      b.innerHTML=`<b>${name}</b><span class="ex">${ex}</span><small>${m?'Вивчено прикладів: '+m:'Ще не тренували'}</small>`;
+      b.onclick=()=>start({ids:[id]},'home');box.appendChild(b);
+    });
+    $('mixBtn').textContent='Змішане повторення '+set.cls+' класу';
+    renderToggles();
+  }
+  $('mixBtn').onclick=()=>start({ids:CLASSES[set.cls].map(t=>t[0])},'home');
+  $('wordsTile').onclick=()=>start({ids:['words']},'home');
+  $('freeTile').onclick=()=>{renderFree();show('free');};
+  $('mapTile').onclick=()=>{renderMap();show('map');};
+  $('parentTile').onclick=()=>{renderParents();show('parents');};
+
+  // ---------- free screen
+  let cribN=set.sel[0]||2;
+  const usesTables=()=>set.ops.includes('×')||set.ops.includes(':');
+  const usesRange=()=>set.ops.includes('+')||set.ops.includes('−');
+  function renderFree(){
+    const ob=$('ops');ob.innerHTML='';
+    OPS.forEach(o=>{const b=document.createElement('button');b.className='chip';b.setAttribute('aria-pressed',set.ops.includes(o.id));
+      b.innerHTML=o.id+'<small>'+o.name+'</small>';b.setAttribute('aria-label',o.name);
+      b.onclick=()=>{set.ops=set.ops.includes(o.id)?set.ops.filter(x=>x!==o.id):set.ops.concat(o.id);saveSet();renderFree();};ob.appendChild(b);});
+    const rb=$('ranges');rb.innerHTML='';
+    [10,20,100].forEach(r=>{const b=document.createElement('button');b.textContent='до '+r;b.setAttribute('aria-pressed',r===set.range);
+      b.onclick=()=>{set.range=r;saveSet();renderFree();};rb.appendChild(b);});
+    const cb=$('chips');cb.innerHTML='';
+    NUMS.forEach(n=>{const b=document.createElement('button');b.className='chip';b.setAttribute('aria-pressed',set.sel.includes(n));
+      b.innerHTML=n+'<small>на '+n+'</small>';b.setAttribute('aria-label','Таблиця на '+n);
+      b.onclick=()=>{set.sel=set.sel.includes(n)?set.sel.filter(x=>x!==n):set.sel.concat(n);cribN=n;saveSet();renderFree();};cb.appendChild(b);});
+    const tabs=$('cribTabs');tabs.innerHTML='';
+    [1,2,3,4,5,6,7,8,9,10].forEach(n=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('aria-pressed',n===cribN);
+      b.onclick=()=>{cribN=n;renderFree();};tabs.appendChild(b);});
+    const div=set.ops.includes(':')&&!set.ops.includes('×');let h='';
+    for(let i=1;i<=10;i++) h+=div?`<div>${cribN*i} : ${cribN} = <b>${i}</b></div>`:`<div>${cribN} × ${i} = <b>${cribN*i}</b></div>`;
+    $('cribList').innerHTML=h;
+    $('rangeBlock').hidden=!usesRange();$('tableBlock').hidden=!usesTables();$('crib').hidden=!usesTables();
+    let why='';if(!set.ops.length)why='Обери хоча б одну дію';else if(usesTables()&&!set.sel.length)why='Обери хоча б одну таблицю';
+    $('goBtn').disabled=!!why;$('goBtn').textContent=why||'Почати! 10 прикладів';
+  }
+  $('allBtn').onclick=()=>{set.sel=NUMS.slice();saveSet();renderFree();};
+  $('noneBtn').onclick=()=>{set.sel=[];saveSet();renderFree();};
+  $('goBtn').onclick=()=>start({ids:['free']},'free');
+
+  // ---------- game
+  let queue=[],idx=0,input='',results=[],streak=0,locked=false,lastSrc=null,timer=null;
+  const PRAISE=['Молодець!','Правильно!','Чудово!','Супер!','Так тримати!','Розумниця!','Блискуче!'];
+  function start(src,from){
+    const q=src.pool?shuffle(src.pool.slice()):buildRound(src.ids);
+    if(!q.length){toast('Поки що немає прикладів для повторення');return;}
+    lastSrc=src;ret=from||'home';queue=q;idx=0;results=[];streak=0;t0=Date.now();
+    show('play');nextQ();
   }
   function renderStars(){
-    const box=$('stars'); box.innerHTML='';
-    queue.forEach((_,i)=>{
-      const s=document.createElement('span');
-      const r=results[i];
-      s.textContent = r===false ? '○' : '★';
-      if(r===true) s.className='on'; else if(r===false) s.className='miss'; else if(i===idx) s.className='cur';
-      box.appendChild(s);
-    });
-    $('streak').textContent = streak>=3 ? '🔥'+streak : '';
+    const box=$('stars');box.innerHTML='';
+    queue.forEach((_,i)=>{const s=document.createElement('span'),r=results[i];s.textContent=r===false?'○':'★';
+      if(r===true)s.className='on';else if(r===false)s.className='miss';else if(i===idx)s.className='cur';box.appendChild(s);});
+    $('streak').textContent=streak>=3?'🔥 '+streak+' поспіль':'';
   }
   function nextQ(){
+    clearTimeout(timer);
     if(idx>=queue.length) return finish();
     const q=queue[idx];
-    $('qa').textContent=q.a; $('qop').textContent=q.op; $('qb').textContent=q.b;
-    input=''; locked=false;
-    $('slot').className='slot'; $('msg').className='msg'; $('msg').innerHTML='';
-    renderSlot(); renderStars();
+    $('story').hidden=!q.text;$('story').textContent=q.text||'';
+    const eq=$('eq');
+    const toks=q.text?['Відповідь:','?']:q.tokens;
+    eq.innerHTML=toks.map(t=>t==='?'?'<span class="slot" id="slot"></span>':t==='Відповідь:'?'<span class="lbl">Відповідь:</span>':'<span>'+t+'</span>').join('');
+    const len=q.text?0:q.tokens.join('').length;
+    eq.className='eq'+(len>12?' small':len>9?' mid':'');
+    input='';locked=false;$('msg').className='msg';$('msg').innerHTML='';
+    renderSlot();renderStars();speak(sayQ(q));
   }
-  function renderSlot(){ $('slot').innerHTML = input ? input : '<span class="caret"></span>'; }
+  function renderSlot(){$('slot').innerHTML=input?input:'<span class="caret"></span>';}
   function press(k){
-    if(locked) return;
-    if(k==='del'){ input=input.slice(0,-1); renderSlot(); return; }
-    if(k==='go'){ check(); return; }
-    if(input.length>=3) return;
-    if(input==='0') input='';
-    input+=k; renderSlot();
+    if(locked)return;
+    if(k==='del'){input=input.slice(0,-1);renderSlot();return;}
+    if(k==='go'){check();return;}
+    if(input.length>=4)return;
+    if(input==='0')input='';
+    input+=k;renderSlot();
   }
   function check(){
-    if(!input){ $('slot').classList.remove('shake'); void $('slot').offsetWidth; $('slot').classList.add('shake'); return; }
+    const slot=$('slot');
+    if(!input){slot.classList.remove('shake');void slot.offsetWidth;slot.classList.add('shake');return;}
     locked=true;
-    const q=queue[idx], ans=answer(q), ok=parseInt(input,10)===ans;
-    results[idx]=ok;
-    const slot=$('slot'), msg=$('msg');
+    const q=queue[idx],ok=parseInt(input,10)===q.ans;
+    results[idx]=ok;record(q,ok);
+    const msg=$('msg');
     if(ok){
-      streak++;
-      slot.className='slot ok pop'; msg.className='msg ok';
-      msg.textContent = streak>=5 && streak%5===0 ? `${streak} поспіль! Неймовірно!` : PRAISE[Math.floor(Math.random()*PRAISE.length)];
-      beep(true);
-      setTimeout(()=>{idx++;nextQ();}, 900);
-    } else {
-      streak=0;
-      slot.className='slot no shake'; msg.className='msg no';
-      msg.innerHTML = `Майже! Запам'ятай:<span class="fix">${q.a} ${q.op} ${q.b} = ${ans}</span>`;
-      beep(false);
-      setTimeout(()=>{ slot.textContent=ans; }, 450);
-      setTimeout(()=>{idx++;nextQ();}, 2400);
+      streak++;slot.className='slot ok pop';msg.className='msg ok';
+      const p=streak>=5&&streak%5===0?`${streak} поспіль! Неймовірно!`:pick(PRAISE);
+      msg.textContent=p;beep(true);speak(p);
+      timer=setTimeout(()=>{idx++;nextQ();},1100);
+    }else{
+      streak=0;slot.className='slot no shake';msg.className='msg no';
+      const solved=q.text?('Відповідь: '+q.ans):q.tokens.map(t=>t==='?'?q.ans:t).join(' ');
+      msg.innerHTML=`Майже! Запам'ятай:<span class="fix">${solved}</span>`;
+      beep(false);speak('Правильна відповідь: '+q.ans);
+      setTimeout(()=>{slot.textContent=q.ans;},450);
+      timer=setTimeout(()=>{idx++;nextQ();},2600);
     }
     renderStars();
   }
   function finish(){
-    const good=results.filter(Boolean).length, total=queue.length, ratio=good/total;
-    const starsN = ratio===1?3: ratio>=0.8?2: ratio>=0.5?1:0;
-    $('bigStars').innerHTML=[0,1,2].map(i=>`<span class="${i<starsN?'on':''}">★</span>`).join('');
+    addTime(true);
+    const good=results.filter(Boolean).length,total=queue.length,ratio=good/total;
+    const sN=ratio===1?3:ratio>=.8?2:ratio>=.5?1:0;
+    $('bigStars').innerHTML=[0,1,2].map(i=>`<span class="${i<sN?'on':''}">★</span>`).join('');
     $('score').textContent=`${good} / ${total}`;
-    $('praise').textContent = starsN===3?'Ідеально! Жодної помилки!': starsN===2?'Чудова робота!': starsN===1?'Добре! Ще трохи практики':'Не здавайся, у тебе вийде!';
-    const wrong=[], seen=new Set();
-    queue.forEach((q,i)=>{ if(results[i]===false && !seen.has(key(q))){seen.add(key(q));wrong.push(q);} });
-    $('review').hidden = wrong.length===0;
-    $('fixBtn').hidden = wrong.length===0;
-    $('reviewList').innerHTML = wrong.map(q=>`<li>${q.a} ${q.op} ${q.b} = ${answer(q)}</li>`).join('');
-    $('fixBtn').onclick=()=>startRound(wrong);
-    if(!lastPool){ const best=store.get('mx-best',0); if(good>best) store.set('mx-best',good); }
-    show('result');
-    if(starsN>=2) beep(true);
+    $('praise').textContent=sN===3?'Ідеально! Жодної помилки!':sN===2?'Чудова робота!':sN===1?'Добре! Ще трохи практики':'Не здавайся, у тебе вийде!';
+    const wrong=[],seen=new Set();
+    queue.forEach((q,i)=>{if(results[i]===false&&!seen.has(q.key)){seen.add(q.key);wrong.push(q);}});
+    $('review').hidden=!wrong.length;$('fixBtn').hidden=!wrong.length;
+    $('reviewList').innerHTML=wrong.map(q=>q.text?`<li>${q.ans}<small>${q.text}</small></li>`:`<li>${q.tokens.map(t=>t==='?'?q.ans:t).join(' ')}</li>`).join('');
+    $('fixBtn').onclick=()=>start({pool:wrong},ret);
+    show('result');if(sN>=2)beep(true);
+    speak(sN===3?'Ідеально! Жодної помилки!':'Правильних відповідей: '+good+' з '+total);
   }
-
-  // keypad
   const pad=$('pad');
   ['1','2','3','4','5','6','7','8','9','del','0','go'].forEach(k=>{
-    const b=document.createElement('button');
-    b.className='key'+(k==='go'?' go':k==='del'?' del':'');
-    b.textContent = k==='del'?'⌫':k==='go'?'✓':k;
-    b.setAttribute('aria-label', k==='del'?'Стерти':k==='go'?'Перевірити':k);
-    b.onclick=()=>press(k);
-    pad.appendChild(b);
+    const b=document.createElement('button');b.className='key'+(k==='go'?' go':k==='del'?' del':'');
+    b.textContent=k==='del'?'⌫':k==='go'?'✓':k;b.setAttribute('aria-label',k==='del'?'Стерти':k==='go'?'Перевірити':k);
+    b.onclick=()=>press(k);pad.appendChild(b);
   });
   document.addEventListener('keydown',e=>{
-    if($('play').hidden) return;
-    if(/^[0-9]$/.test(e.key)) press(e.key);
-    else if(e.key==='Backspace') press('del');
-    else if(e.key==='Enter'){ e.preventDefault(); press('go'); }
+    if($('play').hidden)return;
+    if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('del');else if(e.key==='Enter'){e.preventDefault();press('go');}
   });
+  $('sayBtn').onclick=()=>{if(queue[idx])speak(sayQ(queue[idx]));};
+  $('backBtn').onclick=()=>{clearTimeout(timer);addTime(false);if(hasTTS)try{speechSynthesis.cancel();}catch(e){}
+    if(ret==='free')renderFree();else if(ret==='map')renderMap();else if(ret==='parents')renderParents();else renderHome();show(ret);};
+  $('againBtn').onclick=()=>start(lastSrc,ret);
+  $('homeBtn').onclick=()=>{renderHome();show('home');};
 
-  $('goBtn').onclick=()=>startRound(null);
-  $('againBtn').onclick=()=>startRound(lastPool);
-  $('homeBtn').onclick=()=>{renderAll();show('start');};
-  $('backBtn').onclick=()=>{renderAll();show('start');};
+  // ---------- knowledge map
+  let mapKind='mul';
+  const lvl=r=>!r||!r.seen?'u':r.box===0?'0':r.box<=2?'1':r.box<=3?'2':'3';
+  function renderMap(){
+    document.querySelectorAll('#mapSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.map===mapKind));
+    const S=mapKind==='mul'?mulS:addS,op=mapKind==='mul'?'×':'+';
+    let h=`<div class="h">${op}</div>`;
+    for(let c=1;c<=10;c++)h+=`<div class="h">${c}</div>`;
+    for(let r=1;r<=10;r++){
+      h+=`<div class="h">${r}</div>`;
+      for(let c=1;c<=10;c++)h+=`<div class="c-${lvl(S[pairKey(r,c)])}">${mapKind==='mul'?r*c:r+c}</div>`;
+    }
+    $('mapGrid').innerHTML=h;
+    let done=0;for(let a=1;a<=10;a++)for(let b=a;b<=10;b++){const x=S[pairKey(a,b)];if(x&&x.box>=4)done++;}
+    $('mapLead').textContent=(mapKind==='mul'?'Таблиця множення':'Додавання чисел до 10')+': вивчено '+done+' з 55 прикладів';
+  }
+  document.querySelectorAll('#mapSeg button').forEach(b=>b.onclick=()=>{mapKind=b.dataset.map;renderMap();});
+  $('mapTrain').onclick=()=>{
+    const S=mapKind==='mul'?mulS:addS,op=mapKind==='mul'?'×':'+';
+    const ks=Object.keys(S).filter(k=>S[k].box<=2).sort((x,y)=>S[x].box-S[y].box).slice(0,10);
+    if(!ks.length){toast('Жовтих і червоних клітинок немає. Потренуй нові теми!');return;}
+    const pool=ks.map(k=>{const [x,y]=k.split('x').map(Number);const q=Math.random()<.5?eqQ(x,op,y):eqQ(y,op,x);q.topic='map';q.key=q.tokens.join(' ');return q;});
+    start({pool},'map');
+  };
 
-  renderSound(); renderAll();
+  // ---------- parents
+  const DOW=['Нд','Пн','Вт','Ср','Чт','Пт','Сб'];
+  const fmtMin=s=>s<=0?'0':s<60?'<1':String(Math.round(s/60));
+  function weakFacts(){
+    return Object.values(facts).filter(f=>f.seen>=2&&f.box<=1)
+      .sort((x,y)=>(x.box-y.box)||((x.ok/x.seen)-(y.ok/y.seen))).slice(0,8);
+  }
+  function renderParents(){
+    const now=new Date();let wsec=0,wq=0,wok=0;const cols=[];
+    for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);const r=days[dayKey(d)]||{sec:0,q:0,ok:0};
+      wsec+=r.sec;wq+=r.q;wok+=r.ok;cols.push({l:DOW[d.getDay()],s:r.sec});}
+    const td=days[dayKey()]||{sec:0,q:0};
+    let mm=0;for(let a=1;a<=10;a++)for(let b=a;b<=10;b++){const x=mulS[pairKey(a,b)];if(x&&x.box>=4)mm++;}
+    $('stats').innerHTML=[
+      [fmtMin(td.sec)+' хв','сьогодні'],[fmtMin(wsec)+' хв','за 7 днів'],
+      [wq?Math.round(wok/wq*100)+'%':'—','правильних відповідей за тиждень'],[mm+' / 55','вивчено в таблиці множення']
+    ].map(([b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
+    const mx=Math.max(60,...cols.map(c=>c.s));
+    $('bars').innerHTML=cols.map(c=>`<div class="col"><em>${c.s?fmtMin(c.s):''}</em><div class="b" style="height:${Math.round(c.s/mx*80)}%"></div><span>${c.l}</span></div>`).join('');
+    const wf=weakFacts();
+    $('weakList').innerHTML=wf.length?wf.map(f=>`<li>${f.q.text?('Задача, відповідь '+f.q.ans):f.q.tokens.map(t=>t==='?'?f.q.ans:t).join(' ')}<small>${f.ok} з ${f.seen} правильно</small></li>`).join(''):'<li style="font-family:var(--body);font-size:1rem">Поки що важких прикладів немає.</li>';
+    $('weakBtn').hidden=!wf.length;$('resetBox').hidden=true;$('resetBtn').hidden=false;
+  }
+  $('weakBtn').onclick=()=>{const pool=weakFacts().map(f=>Object.assign({},f.q));start({pool},'parents');};
+  $('resetBtn').onclick=()=>{$('resetBox').hidden=false;$('resetBtn').hidden=true;};
+  $('resetNo').onclick=()=>{$('resetBox').hidden=true;$('resetBtn').hidden=false;};
+  $('resetYes').onclick=()=>{facts={};mulS={};addS={};days={};saveData();renderParents();toast('Прогрес скинуто');};
+
+  renderHome();
 })();
 </script>
 </body>
